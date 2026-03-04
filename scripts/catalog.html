@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Catalogue Professionnel - AGI</title>
+    <style>
+        /* PDF specific CSS for A4 printing */
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+        :root {
+            --color-dark: #000000;
+            --color-gold: #D4AF37;
+            --color-white: #ffffff;
+            --color-gray: #555555;
+            --color-light-alt: #333333;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            color: var(--color-dark);
+            margin: 0;
+            padding: 0;
+            background: var(--color-white);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+            /* Puppeteer will rely on CSS margins */
+        }
+
+        /* Page Layout */
+        .page {
+            width: 210mm;
+            height: 296.5mm;
+            /* 0.5mm tolerance to completely prevent Puppeteer blank page bleeding */
+            padding: 15mm;
+            padding-bottom: 25mm;
+            /* Leave absolute footer space */
+            box-sizing: border-box;
+            background: white;
+            page-break-after: always;
+            break-after: page;
+            position: relative;
+            overflow: hidden;
+            /* Prevent ANY bleeding to the next page */
+
+            /* Flexbox makes elements stack cleanly without overlapping */
+            display: block;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 15mm;
+            /* Height of the footer */
+            padding: 0 15mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--color-gray);
+            border-top: 1px solid #eee;
+        }
+
+        .cover-page {
+            background-color: var(--color-dark);
+            color: var(--color-white);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            padding: 20mm 20mm;
+        }
+
+        /* Cover decorations */
+        .cover-page::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10mm;
+            background-color: var(--color-gold);
+        }
+
+        .cover-page::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 10mm;
+            background-color: var(--color-gold);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Sora', sans-serif;
+            margin-top: 0;
+        }
+
+        /* Cover Content */
+        .cover-logo {
+            width: 280px;
+            margin-bottom: 2rem;
+            /* Filter to make a dark logo white if needed */
+        }
+
+        .cover-title {
+            font-size: 3rem;
+            color: var(--color-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .cover-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .cover-badge {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--color-gold);
+            padding: 0.5rem 1.5rem;
+            color: var(--color-gold);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cover-image-container {
+            width: 100%;
+            height: 160mm;
+            overflow: hidden;
+            border: 2px solid var(--color-gold);
+            margin-bottom: 1rem;
+        }
+
+        .cover-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Standard Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--color-gold);
+            padding-bottom: 5mm;
+            margin-bottom: 5mm;
+        }
+
+        .page-header img {
+            height: 35px;
+        }
+
+        .page-header-title {
+            font-size: 1.1rem;
+            color: var(--color-light-alt);
+            font-weight: 600;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 2rem;
+            color: var(--color-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .title-underline {
+            width: 60px;
+            height: 3px;
+            background-color: var(--color-gold);
+            margin-bottom: 5mm;
+        }
+
+        /* Content Blocks */
+        .text-lead {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .text-body {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--color-light-alt);
+            margin-bottom: 1rem;
+        }
+
+        /* Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10mm;
+            margin-bottom: 5mm;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5mm;
+        }
+
+        /* Cards */
+        .card {
+            border: 1px solid #ddd;
+            padding: 8mm;
+            background: #fafafa;
+        }
+
+        .card-title {
+            color: var(--color-gold);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .card-list li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .card-list li::before {
+            content: "→";
+            color: var(--color-gold);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .cat-image {
+            width: 100%;
+            height: 40mm;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+        }
+
+        /* Brands grid */
+        .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5mm;
+            text-align: center;
+        }
+
+        .brand-item {
+            padding: 6mm;
+            border: 1px solid #eee;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Footer */
+        .page-footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 15mm;
+            right: 15mm;
+            border-top: 1px solid #eee;
+            padding-top: 5mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--color-gray);
+        }
+
+        /* Contact Section */
+        .contact-box {
+            background-color: var(--color-dark);
+            color: var(--color-white);
+            padding: 10mm;
+            margin-bottom: 10mm;
+            border-left: 5px solid var(--color-gold);
+        }
+
+        .contact-box h3 {
+            color: var(--color-gold);
+        }
+
+        /* Utility */
+        .text-gold {
+            color: var(--color-gold);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- PAGE 1: COVER -->
+    <div class="page"
+        style="padding: 0; background-color: #ffffff; border-left: 8px solid var(--color-gold); overflow: hidden; position: relative;">
+
+        <!-- Abstract Shapes -->
+        <!-- Yellow Background Shape -->
+        <div
+            style="position: absolute; top: -5%; right: -5%; width: 75%; height: 110%; background-color: var(--color-gold); border-top-left-radius: 800px; border-bottom-left-radius: 800px; z-index: 1;">
+        </div>
+
+        <!-- Image Shape overlapping Yellow Blob -->
+        <div
+            style="position: absolute; top: 0; right: 0; width: 65%; height: 100%; background-image: url('../public/gallery/img_31.jpeg'); background-size: cover; background-position: center; border-top-left-radius: 600px; border-bottom-left-radius: 600px; z-index: 2; box-shadow: -10px 0 20px rgba(0,0,0,0.15);">
+        </div>
+
+        <!-- Top Right White Cutout (Decorative) -->
+        <div
+            style="position: absolute; top: 10%; right: 58%; width: 150px; height: 150px; background-color: #ffffff; border-radius: 50%; z-index: 3;">
+        </div>
+
+        <!-- Bottom Left Dark Cutout (Decorative) -->
+        <div
+            style="position: absolute; bottom: -80px; left: -80px; width: 140px; height: 140px; background-color: #2b3036; border-radius: 50%; z-index: 3;">
+        </div>
+
+        <!-- Logo -->
+        <div style="position: absolute; top: 15mm; left: 15mm; z-index: 10;">
+            <!-- Dark logo since background is now white -->
+            <img src="../src/assets/logo.png" style="width: 250px;" alt="AGI Logo" />
+        </div>
+
+        <!-- Dark Title Box -->
+        <div
+            style="position: absolute; top: 40%; left: 0; width: 55%; background-color: #2b3036; padding: 15mm 20mm 15mm 15mm; border-top-right-radius: 70px; border-bottom-right-radius: 70px; z-index: 5; box-shadow: 10px 15px 30px rgba(0,0,0,0.3); outline: 2px solid #ffffff; outline-offset: -10px;">
+            <h1 style="color: white; font-size: 3.5rem; margin: 0; line-height: 1.1; font-family: 'Sora', sans-serif;">
+                Catalogue<br>
+                <span style="color: var(--color-gold);">Professionnel</span>
+            </h1>
+            <h2 style="color: white; font-size: 1.4rem; margin-top: 15px; font-weight: 500; opacity: 0.9;">
+                Pièces & Équipements<br>Miniers et Industriels
+            </h2>
+        </div>
+
+        <!-- Bottom Left Text -->
+        <div
+            style="position: absolute; bottom: 15mm; left: 15mm; width: 33%; max-width: 280px; z-index: 10; border-left: 4px solid var(--color-gold); padding-left: 15px;">
+            <p style="margin: 0; font-size: 1rem; color: #555; line-height: 1.5;">
+                <strong style="color: var(--color-dark);">Afrique Globale Industrie</strong><br>
+                Importateur Direct Chine. Des solutions complètes et certifiées pour vos opérations sur le continent
+                africain.
+            </p>
+        </div>
+    </div>
+
+    <!-- PAGE 2: LE MOT DU PDG -->
+    <div class="page">
+        <div class="page-header">
+            <img src="../src/assets/logo.png" alt="AGI Logo" />
+            <div class="page-header-title">Mot de la Direction Générale</div>
+        </div>
+
+
+        <div class="grid-2">
+            <div>
+                <img src="../public/boss/boss_3.jpeg"
+                    style="width: 100%; height: 95mm; object-fit: cover; border: 1px solid #ddd; margin-bottom: 5mm;"
+                    alt="Cheick Mohammed Korgo" />
+                <div class="grid-2" style="gap: 5mm; margin-bottom: 0;">
+                    <img src="../public/boss/boss_1.jpeg"
+                        style="width: 100%; height: 25mm; object-fit: cover; border: 1px solid #ddd;" alt="CEO" />
+                    <img src="../public/boss/boss_4.jpeg"
+                        style="width: 100%; height: 25mm; object-fit: cover; border: 1px solid #ddd;" alt="CEO" />
+                </div>
+            </div>
+            <div>
+                <h3 style="color: var(--color-gold); font-size: 1.5rem; margin-bottom: 0.5rem;">Cheick Mohammed Korgo
+                </h3>
+                <p style="font-weight: 600; color: var(--color-gray); margin-bottom: 5mm; font-size: 1rem;">Président
+                    Directeur Général</p>
+
+                <p class="text-body"
+                    style="font-style: italic; font-size: 1.1rem; border-left: 4px solid var(--color-gold); padding-left: 1rem; margin-bottom: 1rem; line-height: 1.6;">
+                    « Notre mission première est d'être le pont fiable et rapide entre les meilleurs fabricants
+                    industriels
+                    et vos opérations sur le continent africain. »
+                </p>
+
+                <p class="text-body" style="font-size: 0.95rem; margin-bottom: 0.8rem; line-height: 1.6;">
+                    Forts de notre présence stratégique à Guangzhou (Chine) et de notre siège de coordination au cœur de
+                    l'Afrique de l'Ouest (Ouagadougou), nous comprenons intrinsèquement les défis d'approvisionnement
+                    auxquels font face les acteurs miniers et industriels.
+                </p>
+                <p class="text-body" style="font-size: 0.95rem; margin-bottom: 0.8rem; line-height: 1.6;">
+                    Chaque heure d'arrêt machine a un coût conséquent. C'est pourquoi je veille personnellement à
+                    consolider
+                    un réseau de partenaires fabricants de très haute qualité, capables de fournir des équipements
+                    durables,
+                    certifiés, à des conditions directes d'usine.
+                </p>
+                <p class="text-body" style="font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">
+                    Afrique Globale Industrie n'est pas qu'un importateur grossiste. Nous sommes votre partenaire
+                    stratégique dédié à votre productivité continue et à votre développement durable.
+                </p>
+
+                <div style="margin-top: auto; display: flex; align-items: center;">
+                    <img src="../public/boss/boss_5.jpeg"
+                        style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--color-gold); margin-right: 15px;"
+                        alt="Avatar" />
+                    <span
+                        style="font-family: 'Sora', sans-serif; font-weight: bold; color: var(--color-dark); font-size: 1.2rem;">C.
+                        M. Korgo</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Afrique Globale Industrie - Catalogue Professionnel</span>
+            <span>Page 1</span>
+        </div>
+    </div>
+
+    <!-- PAGE 3: ABOUT & BRANDS -->
+    <div class="page">
+        <div class="page-header">
+            <img src="../src/assets/logo.png" alt="AGI Logo" />
+            <div class="page-header-title">Présentation & Marques</div>
+        </div>
+
+        <h2 class="section-title">Présentation de l'Entreprise</h2>
+        <div class="title-underline"></div>
+
+        <p class="text-lead">
+            Afrique Globale Industrie est un importateur direct basé sur un réseau de fabricants en Chine, spécialisé
+            dans la fourniture de pièces pour machines minières et industrielles multi-marques.
+        </p>
+
+        <div class="grid-2">
+            <div>
+                <img src="../public/gallery/img_50.jpeg"
+                    style="width: 100%; height: 60mm; object-fit: cover; border: 1px solid #ddd;" alt="Présentation" />
+            </div>
+            <div>
+                <p class="text-body">
+                    Basés sur un solide réseau de fabricants en Chine, nous supprimons les intermédiaires pour vous
+                    offrir des <strong>solutions complètes directes d'usine</strong>. Notre expertise couvre une large
+                    gamme de marques mondiales, garantissant que vos opérations ne subissent jamais de temps d'arrêt
+                    prolongés.
+                </p>
+                <ul class="card-list" style="margin-bottom: 1rem;">
+                    <li>Importateur Direct (Direct China Importer)</li>
+                    <li>Solutions pour machines minières et industrielles</li>
+                    <li>Qualité certifiée et garantie</li>
+                    <li>Support multimarques Premium</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 10mm;">Nos Marques Partenaires</h2>
+        <div class="title-underline"></div>
+        <div class="brands-grid">
+            <div class="brand-item"><img src="../public/brands/cat.png" alt="Caterpillar"
+                    style="max-height: 25px; max-width: 100%; object-fit: contain;"></div>
+            <div class="brand-item"><img src="../public/brands/KOMATSU.png" alt="Komatsu"
+                    style="max-height: 25px; max-width: 100%; object-fit: contain;"></div>
+            <div class="brand-item"><img src="../public/brands/hitachi.svg" alt="Hitachi"
+                    style="max-height: 25px; max-width: 100%; object-fit: contain;"></div>
+            <div class="brand-item"><img src="../public/brands/volvo.svg" alt="Volvo Construction"
+                    style="max-height: 25px; max-width: 100%; object-fit: contain;"></div>
+            <div class="brand-item"><img src="../public/brands/doosan.png" alt="Doosan"
+                    style="max-height: 25px; max-width: 100%; object-fit: contain;"></div>
+            <div class="brand-item"><img src="../public/brands/hyundai.svg" alt="Hyundai"
+                    style="max-height: 25px; max-width: 100%; object-fit: contain;"></div>
+        </div>
+
+        <div class="page-footer">
+            <span>Afrique Globale Industrie - Catalogue Professionnel</span>
+            <span>Page 2</span>
+        </div>
+    </div>
+
+    <!-- PAGE 4: PRODUCTS -->
+    <div class="page">
+        <div class="page-header">
+            <img src="../src/assets/logo.png" alt="AGI Logo" />
+            <div class="page-header-title">Nos Catégories de Produits</div>
+        </div>
+
+        <h2 class="section-title">Catalogue de Pièces</h2>
+        <div class="title-underline"></div>
+
+        <div class="grid-2" style="margin-bottom: 5mm;">
+            <div class="card">
+                <img src="../public/gallery/img_31.jpeg" class="cat-image" alt="Hydraulique" />
+                <h3 class="card-title">Pièces Hydrauliques</h3>
+                <ul class="card-list">
+                    <li>Pompe Principale (Main Pump)</li>
+                    <li>Pompes à Engrenages (Gear Pumps)</li>
+                    <li>Moteur de Rotation (Swing Motor)</li>
+                    <li>Moteur de Translation (Travel Motor)</li>
+                    <li>Cylindres / Vérins Hydrauliques (Hydraulic Cylinders : Boom, Arm, Bucket)</li>
+                    <li>Distributeurs / Soupapes de Commande (Control Valves)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <img src="../public/gallery/img_70.jpeg" class="cat-image" alt="Moteur" />
+                <h3 class="card-title">Pièces Moteur & Minières</h3>
+                <ul class="card-list">
+                    <li>Injecteurs (Injectors)</li>
+                    <li>Turbo Compresseurs (Turbochargers)</li>
+                    <li>Kits de Révision Moteur (Engine Overhaul Kits)</li>
+                    <li>Filtres (Air, Huile, Fuel - Filters)</li>
+                    <li>Radiateurs & Refroidisseurs (Radiators & Coolers)</li>
+                    <li>Pièces de Train de Roulement (Undercarriage Parts)</li>
+                    <li>Rouleaux & Chaînes (Rollers & Chains)</li>
+                    <li>Dents de Godet & Lames (Bucket Teeth & Cutting Edges)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Afrique Globale Industrie - Catalogue Professionnel</span>
+            <span>Page 3</span>
+        </div>
+    </div>
+
+    <!-- PAGE 5: SERVICES -->
+    <div class="page">
+        <div class="page-header">
+            <img src="../src/assets/logo.png" alt="AGI Logo" />
+            <div class="page-header-title">Services & Engagements</div>
+        </div>
+
+        <h2 class="section-title">Services & Engagements</h2>
+        <div class="title-underline"></div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3 class="card-title">Logistique & Livraison</h3>
+                <p class="text-body">Nous optimisons notre chaîne logistique pour réduire vos temps d'arrêt.</p>
+                <ul class="card-list">
+                    <li><strong>Délais moyens :</strong> ~21 jours après la date d'envoi pour les pièces standards.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="card-title">Flexibilité de Paiement</h3>
+                <p class="text-body">Des options adaptées à votre trésorerie d'entreprise.</p>
+                <ul class="card-list">
+                    <li>Mobile Money (selon pays)</li>
+                    <li>Virement bancaire professionnel</li>
+                    <li>Paiement progressif selon accord commercial</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 5mm;">
+            <div class="card">
+                <h3 class="card-title">Garantie & Qualité Premium</h3>
+                <p class="text-body" style="margin-bottom: 0.5rem;">Nous ne transigeons jamais sur la qualité pour
+                    assurer la pérennité de vos engins.</p>
+                <ul class="card-list">
+                    <li>Pièces certifiées d'origine ou OEM de haute volée.</li>
+                    <li>Contrôle rigoureux avant toute expédition depuis la Chine.</li>
+                    <li>Remplacement garanti en cas de défaut d'usine avéré.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="card-title">Support & Accompagnement</h3>
+                <p class="text-body" style="margin-bottom: 0.5rem;">Un véritable partenariat au-delà de la simple vente
+                    de détachées.</p>
+                <ul class="card-list">
+                    <li>Sourcing sur mesure pour des demandes ultra-spécifiques.</li>
+                    <li>Équipe dédiée pour vous conseiller techniquement.</li>
+                    <li>Suivi minutieux de chaque commande jusqu'à votre site.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Afrique Globale Industrie - Catalogue Professionnel</span>
+            <span>Page 4</span>
+        </div>
+    </div>
+
+    <!-- PAGE 6: CONTACT -->
+    <div class="page">
+        <div class="page-header">
+            <img src="../src/assets/logo.png" alt="AGI Logo" />
+            <div class="page-header-title">Contact & Devis</div>
+        </div>
+
+        <h2 class="section-title">Nous Contacter</h2>
+        <div class="title-underline"></div>
+
+        <p class="text-lead">
+            Prêt à optimiser l'approvisionnement de vos pièces industrielles ? Notre équipe est à votre disposition pour
+            toute demande de devis ou d'information.
+        </p>
+
+        <div class="grid-2" style="margin-top: 15mm; gap: 5mm;">
+            <div class="contact-box">
+                <h3>Bureau Chine (Opérations)</h3>
+                <p><strong>Responsable :</strong> Cheick Mohammed Korgo</p>
+                <p><strong>Téléphone :</strong> +88 13029339175</p>
+                <p><strong>Adresse :</strong><br>广东省广州市越秀区<br>麓景路老干天厦18楼1807房</p>
+            </div>
+
+            <div class="contact-box">
+                <h3>Bureau Siège (Burkina Faso)</h3>
+                <p><strong>Localisation :</strong> À 300 m de la Grande Mosquée de Ouagadougou, Grand magasin</p>
+                <p><strong>WhatsApp / Commercial :</strong><br>+226 70 10 81 61<br>+226 78 94 88 19</p>
+            </div>
+        </div>
+
+        <div class="grid-2" style="gap: 5mm;">
+            <div class="card" style="border-left: 5px solid var(--color-gold);">
+                <h3 class="card-title">Responsables Locaux</h3>
+                <p><strong>Paiements :</strong> Tapsoba Inoussa (+226 70 63 17 07)</p>
+                <p><strong>Logistique :</strong> Ablasse Bikienga (+226 72 07 76 63)</p>
+            </div>
+
+            <div class="card" style="border-left: 5px solid var(--color-gold);">
+                <h3 class="card-title">Email</h3>
+                <p>korgocheickmohammed549@gmail.com</p>
+            </div>
+        </div>
+
+
+        <div class="page-footer">
+            <span>Afrique Globale Industrie - Catalogue Professionnel</span>
+            <span>Page 5</span>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,119 @@
+.services {
+    background-color: var(--color-dark-alt);
+    position: relative;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+}
+
+@media (max-width: 992px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .service-card {
+        padding: 2rem;
+    }
+
+    .service-image {
+        width: calc(100% + 4rem);
+        margin: -2rem -2rem 2rem -2rem;
+        height: 200px;
+    }
+}
+
+.service-card {
+    background: var(--color-dark);
+    padding: 3.5rem 3rem;
+    border-radius: 0;
+    /* Sharp edges */
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Adjusted for white bg */
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(212, 175, 55, 0.2);
+}
+
+.service-image {
+    width: calc(100% + 6rem);
+    height: 250px;
+    margin: -3.5rem -3rem 2rem -3rem;
+    overflow: hidden;
+    position: relative;
+    border-radius: 0;
+}
+
+.service-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.service-card:hover .service-image img {
+    transform: scale(1.05);
+}
+
+.service-icon-wrapper {
+    margin-bottom: 2rem;
+    display: inline-flex;
+    padding: 1rem;
+    background: rgba(212, 175, 55, 0.1);
+    border-radius: 0;
+    /* Sharp edges */
+}
+
+.service-title {
+    font-size: 1.8rem;
+    color: var(--color-light);
+    margin-bottom: 1rem;
+}
+
+.service-desc {
+    margin-bottom: 2rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.service-highlight {
+    padding: 1.5rem;
+    background: rgba(212, 175, 55, 0.05);
+    border-left: 4px solid var(--color-gold);
+    border-radius: 0;
+    /* Sharp edges */
+    font-size: 1.1rem;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.payment-methods li {
+    color: var(--color-light);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.05rem;
+}
+
+.payment-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-gold);
+    border-radius: 0;
+    /* Sharp edges */
+    /* Removed box-shadow */
+}
